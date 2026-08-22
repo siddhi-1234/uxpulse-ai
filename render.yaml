@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: uxpulse-ai
+    env: static
+    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    pullRequestPreviewsEnabled: true
+    envVars:
+      - key: REACT_APP_GEMINI_API_KEY
+        sync: false
