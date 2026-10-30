@@ -48,7 +48,7 @@ function HeatmapBox({ annotation, index, onClick, isSelected }) {
         zIndex: isSelected ? 50 : 10,
       }}
     >
-      {/* Number Badge */}
+
       <div
         style={{
           position: "absolute",
