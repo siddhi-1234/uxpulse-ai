@@ -1,15 +1,21 @@
+// API key read from environment variable; empty string will trigger a clear error at call time
 const GEMINI_API_KEY = process.env.REACT_APP_GEMINI_API_KEY || '';
+// Gemini 2.5 Flash endpoint with the API key appended as a query param
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
+// Converts a File object to a base64-encoded string (data URL prefix stripped)
+// Required because the Gemini API expects raw base64, not a data URL
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onload = () => resolve(reader.result.split(',')[1]); // strip "data:<mime>;base64," prefix
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
+// Sends the screenshot to Gemini and returns an array of UX annotation objects.
+// Throws descriptive errors for missing API key, HTTP failures, and malformed responses.
 export async function analyzeUIScreenshot(imageFile) {
   if (!GEMINI_API_KEY) {
     throw new Error('No API key found. Add REACT_APP_GEMINI_API_KEY to your .env file.');
@@ -17,6 +23,7 @@ export async function analyzeUIScreenshot(imageFile) {
 
   const base64Image = await fileToBase64(imageFile);
 
+  // Prompt instructs Gemini to return only a raw JSON array with no markdown or prose
   const prompt = `You are a senior UX expert. Analyze this UI screenshot and identify confusion zones where users are likely to hesitate, misclick, or misunderstand.
 
 Return ONLY a valid JSON array. No markdown, no explanation, no code fences — just the raw JSON array.
@@ -43,6 +50,7 @@ Rules:
 - severity must be exactly "high" or "medium"
 - Return ONLY the JSON array, nothing else, no markdown`;
 
+  // Request body: image inline_data + prompt text, with low temperature for consistent JSON output
   const body = {
     contents: [{
       parts: [
@@ -53,6 +61,7 @@ Rules:
     generationConfig: { temperature: 0.4, maxOutputTokens: 8192, responseMimeType: "application/json" },
   };
 
+  // POST to Gemini; surface a readable message on non-2xx responses
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -69,6 +78,7 @@ Rules:
   if (data.error) {
     throw new Error(data.error.message);
   }
+  // Extract the text from the first candidate part
   const candidate = data.candidates?.[0];
   if (!candidate) {
     throw new Error("No candidates returned. Response: " + JSON.stringify(data));
@@ -77,6 +87,7 @@ Rules:
   if (!raw) {
     throw new Error(`AI generated no text. Finish reason: ${candidate.finishReason || 'Unknown'}`);
   }
+  // Attempt to parse the raw text as JSON; log the raw output on failure for easier debugging
   let parsedJson;
   try {
     parsedJson = JSON.parse(raw);
@@ -94,6 +105,7 @@ Rules:
     return [parsedJson]; // Fallback to wrapping the object in an array
   }
 
+  // Validate that the final value is an array before returning
   if (!Array.isArray(parsedJson)) {
     throw new Error("AI did not return an array. Data type: " + typeof parsedJson);
   }
@@ -101,6 +113,7 @@ Rules:
   return parsedJson;
 }
 
+// Hardcoded annotations used for local development and UI testing without hitting the API
 export function getMockAnnotations() {
   return [
     {
