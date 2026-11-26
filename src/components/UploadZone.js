@@ -2,6 +2,7 @@ import { useDropzone } from 'react-dropzone';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 
+// Floating ambient particle that drifts upward in a loop
 function Particle({ x, y, size, duration, delay, color }) {
   return (
     <motion.div
@@ -21,6 +22,7 @@ function Particle({ x, y, size, duration, delay, color }) {
   );
 }
 
+// Horizontal scan line that sweeps top-to-bottom when the drop zone is active or hovered
 function ScanLine({ active }) {
   return (
     <motion.div
@@ -38,6 +40,7 @@ function ScanLine({ active }) {
   );
 }
 
+// Four L-shaped corner brackets rendered around the drop zone to frame it
 function CornerBrackets({ color }) {
   const size = 18;
   const t = 2;
@@ -67,6 +70,7 @@ function CornerBrackets({ color }) {
   );
 }
 
+// Splits a word into individual characters and animates each in with a staggered flip
 function AnimatedWord({ word, color, staggerDelay = 0 }) {
   return (
     <>
@@ -85,6 +89,7 @@ function AnimatedWord({ word, color, staggerDelay = 0 }) {
   );
 }
 
+// Pre-generated particle config array — created once at module level to avoid re-randomising on re-render
 const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   id: i,
   x: Math.random() * 100,
@@ -95,10 +100,12 @@ const PARTICLES = Array.from({ length: 14 }, (_, i) => ({
   color: i % 3 === 0 ? '#7C3AED' : i % 3 === 1 ? '#A78BFA' : '#4F46E5',
 }));
 
+// Landing upload area: hero headline, drag-and-drop zone, and feature chips
 export default function UploadZone({ onImageUpload }) {
   const [hovered, setHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef(null);
+  // Motion values track cursor offset from the container center for the 3D tilt effect
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
@@ -110,9 +117,11 @@ export default function UploadZone({ onImageUpload }) {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Map cursor offset to a subtle ±3° tilt on each axis
   const rotateX = useTransform(mouseY, [-200, 200], [3, -3]);
   const rotateY = useTransform(mouseX, [-200, 200], [-3, 3]);
 
+  // Update motion values relative to the container center; no-op on mobile
   const handleMouseMove = (e) => {
     if (isMobile) return;
     const rect = containerRef.current?.getBoundingClientRect();
@@ -121,6 +130,7 @@ export default function UploadZone({ onImageUpload }) {
     mouseY.set(e.clientY - rect.top - rect.height / 2);
   };
 
+  // Reset tilt and hover state when the cursor leaves the drop zone
   const handleMouseLeave = () => {
     setHovered(false);
     mouseX.set(0);
@@ -141,6 +151,7 @@ export default function UploadZone({ onImageUpload }) {
     },
   });
 
+  // Lighten the accent when a file is actively being dragged over the zone
   const accentColor = isDragActive ? '#A78BFA' : '#7C3AED';
 
   return (
@@ -150,14 +161,14 @@ export default function UploadZone({ onImageUpload }) {
       position: 'relative', overflow: 'hidden',
     }}>
 
-      {/* Background particles — hidden on mobile for performance */}
+      {/* Background particles — suppressed on mobile to avoid layout/performance cost */}
       {!isMobile && (
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
           {PARTICLES.map(p => <Particle key={p.id} {...p} />)}
         </div>
       )}
 
-      {/* Radial glow */}
+      {/* Soft radial glow behind the hero text */}
       <div style={{
         position: 'absolute', top: '5%', left: '50%',
         transform: 'translateX(-50%)',
@@ -166,7 +177,7 @@ export default function UploadZone({ onImageUpload }) {
         pointerEvents: 'none', zIndex: 0,
       }} />
 
-      {/* ── HERO ── */}
+      {/* Hero section: badge, animated headline, underline, and subtitle */}
       <div style={{
         textAlign: 'center', marginTop: '48px', marginBottom: '36px',
         position: 'relative', zIndex: 1,
@@ -175,7 +186,7 @@ export default function UploadZone({ onImageUpload }) {
         MozOsxFontSmoothing: 'grayscale',
       }}>
 
-        {/* Badge */}
+        {/* Pill badge with pulsing dot shown above the headline */}
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -204,7 +215,7 @@ export default function UploadZone({ onImageUpload }) {
           </span>
         </motion.div>
 
-        {/* Headline */}
+        {/* Main headline — "Invisible" animates in character-by-character */}
         <h1 style={{
           fontSize: 'clamp(32px, 8vw, 62px)',
           fontWeight: '800',
@@ -234,7 +245,7 @@ export default function UploadZone({ onImageUpload }) {
           </span>
         </h1>
 
-        {/* Underline */}
+        {/* Gradient underline that scales in beneath the headline */}
         <motion.div
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
@@ -267,7 +278,7 @@ export default function UploadZone({ onImageUpload }) {
         </motion.p>
       </div>
 
-      {/* ── DROP ZONE ── */}
+      {/* Drop zone card with 3D tilt on desktop, scan line, corner brackets, and upload controls */}
       <motion.div
         ref={containerRef}
         onMouseMove={handleMouseMove}
@@ -329,7 +340,7 @@ export default function UploadZone({ onImageUpload }) {
 
           <ScanLine active={isDragActive || hovered} />
 
-          {/* Grid pattern */}
+          {/* Subtle dot-grid background that intensifies on hover/drag */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: `
@@ -342,7 +353,7 @@ export default function UploadZone({ onImageUpload }) {
             transition: 'opacity 0.3s', zIndex: 0,
           }} />
 
-          {/* Upload icon */}
+          {/* Upload icon — wobbles when a file is dragged over */}
           <motion.div
             animate={isDragActive
               ? { scale: [1, 1.12, 1], rotate: [0, -4, 4, 0] }
@@ -407,7 +418,7 @@ export default function UploadZone({ onImageUpload }) {
             Upload Screenshot
           </motion.button>
 
-          {/* Format badges */}
+          {/* Accepted format labels shown below the upload button */}
           <div style={{ display: 'flex', gap: '6px', marginTop: '14px', position: 'relative', zIndex: 1 }}>
             {['PNG', 'JPG', 'WEBP'].map(fmt => (
               <span key={fmt} style={{
@@ -425,7 +436,7 @@ export default function UploadZone({ onImageUpload }) {
         </div>
       </motion.div>
 
-      {/* ── Feature chips ── */}
+      {/* Feature chips summarising the three analysis capabilities */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

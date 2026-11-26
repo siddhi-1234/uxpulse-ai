@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Sequential status messages cycled during analysis to indicate progress
 const steps = [
   'Reading visual hierarchy…',
   'Scanning for confusion zones…',
@@ -9,9 +10,12 @@ const steps = [
   'Generating fix suggestions…',
 ];
 
+// Absolutely-positioned overlay that covers the image while AI analysis is running.
+// Cycles through status messages and fades in/out based on the `visible` prop.
 export default function LoadingOverlay({ visible }) {
   const [step, setStep] = useState(0);
 
+  // Advance to the next step message every 900ms; reset to 0 when hidden
   useEffect(() => {
     if (!visible) { setStep(0); return; }
     const id = setInterval(() => setStep(prev => (prev + 1) % steps.length), 900);
@@ -33,7 +37,7 @@ export default function LoadingOverlay({ visible }) {
             gap: '16px', zIndex: 20,
           }}
         >
-          {/* Spinner */}
+          {/* Spinning ring using CSS animation defined in global styles */}
           <div style={{
             width: '44px', height: '44px', borderRadius: '50%',
             border: '3px solid #2D2D3D',
@@ -41,7 +45,7 @@ export default function LoadingOverlay({ visible }) {
             animation: 'spin 0.75s linear infinite',
           }} />
 
-          {/* Cycling text */}
+          {/* Step label: swaps with a slide transition each time `step` changes */}
           <AnimatePresence mode="wait">
             <motion.p
               key={step}

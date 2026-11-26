@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 
+// Sticky top navigation bar with logo, centered tagline, and user avatar
 export default function Navbar({ onReset }) {
   return (
     <motion.nav
@@ -19,11 +20,12 @@ export default function Navbar({ onReset }) {
         zIndex: 50,
       }}
     >
-      {/* Logo */}
+      {/* Logo: clicking it calls onReset to return to the upload screen */}
       <motion.button
         onClick={onReset}
         whileHover={{ opacity: 0.8 }}
         whileTap={{ scale: 0.97 }}
+        // Cursor is pointer only when onReset is provided (i.e. not on the landing screen)
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -42,7 +44,7 @@ export default function Navbar({ onReset }) {
         </span>
       </motion.button>
 
-      {/* Tagline center */}
+      {/* Tagline: fades in with a blur reveal and scrolls a shimmer gradient */}
       <motion.div
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,6 +55,7 @@ export default function Navbar({ onReset }) {
           gap: '10px',
         }}
       >
+        {/* Pulsing dot accent beside the tagline text */}
         <span className="nav-tagline-dot" style={{
           width: '6px', height: '6px', borderRadius: '50%',
           backgroundColor: '#7C3AED',
@@ -60,8 +63,8 @@ export default function Navbar({ onReset }) {
           boxShadow: '0 0 8px #7C3AED',
           animation: 'pulse 2s infinite',
         }} />
+        {/* Tagline text with shimmer gradient animation */}
         <motion.span
-          className="nav-tagline-text"
           initial={{ filter: 'blur(4px)', opacity: 0 }}
           animate={{ filter: 'blur(0px)', opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
@@ -82,7 +85,7 @@ export default function Navbar({ onReset }) {
         </motion.span>
       </motion.div>
 
-      {/* Right: avatar */}
+      {/* Right: user avatar with spring entrance and hover glow */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
         animate={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -107,6 +110,7 @@ export default function Navbar({ onReset }) {
           userSelect: 'none',
         }}
       >
+        {/* Letter pulses opacity to give a subtle breathing effect */}
         <motion.span
           animate={{ opacity: [1, 0.7, 1] }}
           transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
@@ -116,6 +120,7 @@ export default function Navbar({ onReset }) {
         </motion.span>
       </motion.div>
 
+      {/* Keyframe animations for the dot pulse, tagline shimmer, and responsive hide */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

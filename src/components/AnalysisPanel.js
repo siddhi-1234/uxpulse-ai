@@ -1,17 +1,23 @@
 import { motion } from 'framer-motion';
 
+// Maps severity levels to their corresponding color, background, border, and display label
 const severityConfig = {
   high:   { color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   border: 'rgba(239,68,68,0.3)',   label: 'High' },
   medium: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', label: 'Medium' },
 };
 
+// Floating panel that displays detailed UX issue info for a selected annotation
 export default function AnalysisPanel({ annotation, onClose }) {
+  // Render nothing if no annotation is selected
   if (!annotation) return null;
+
+  // Resolve severity styles, falling back to medium if unrecognized
   const s = severityConfig[annotation.severity] || severityConfig.medium;
 
   return (
     <motion.div
       className="analysis-panel-mobile"
+      // Slide-up + fade-in entrance; reverses on exit
       initial={{ opacity: 0, y: 48, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 48, scale: 0.96 }}
@@ -59,6 +65,7 @@ export default function AnalysisPanel({ annotation, onClose }) {
             fontSize: '20px', lineHeight: 1, flexShrink: 0,
             transition: 'color 0.15s',
           }}
+          // Inline hover effect since CSS modules aren't used here
           onMouseEnter={e => e.target.style.color = 'white'}
           onMouseLeave={e => e.target.style.color = '#6B7280'}
         >
@@ -124,6 +131,7 @@ export default function AnalysisPanel({ annotation, onClose }) {
         </div>
       </div>
 
+      {/* Responsive override: on small screens, panel anchors to the bottom edge */}
       <style>{`
         @media (max-width: 600px) {
           .analysis-panel-mobile {

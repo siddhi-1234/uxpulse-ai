@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AnalysisPanel from "./AnalysisPanel";
 import LoadingOverlay from "./LoadingOverlay";
 
+// Visual styles for each severity level: border, background, hover, dot, and label colors
 const severityStyles = {
   high: {
     border: "#EF4444",
@@ -22,12 +23,15 @@ const severityStyles = {
   },
 };
 
+// Renders a single clickable overlay box on the image for a detected confusion zone
 function HeatmapBox({ annotation, index, onClick, isSelected }) {
   const { zone, severity } = annotation;
+  // Fall back to medium styles if severity is unrecognized
   const s = severityStyles[severity] || severityStyles.medium;
 
   return (
     <motion.div
+      // Staggered entrance animation based on annotation index
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.3, delay: index * 0.08 }}
@@ -48,7 +52,7 @@ function HeatmapBox({ annotation, index, onClick, isSelected }) {
         zIndex: isSelected ? 50 : 10,
       }}
     >
-      {/* Number Badge */}
+      {/* Numbered badge anchored to the top-left corner of the zone */}
       <div
         style={{
           position: "absolute",
@@ -71,7 +75,7 @@ function HeatmapBox({ annotation, index, onClick, isSelected }) {
         {index + 1}
       </div>
 
-      {/* Pulse dot (hidden if we have a badge, or we can keep it inside the box) */}
+      {/* Pulsing dot in the top-right corner to draw attention to the zone */}
       <motion.div
         animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
         transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
@@ -89,6 +93,8 @@ function HeatmapBox({ annotation, index, onClick, isSelected }) {
   );
 }
 
+// Main preview component: displays the uploaded image with heatmap overlays,
+// a sidebar listing all detected zones, and a floating detail panel on selection
 export default function ImagePreview({
   imageUrl,
   analyzing,
@@ -102,6 +108,7 @@ export default function ImagePreview({
 }) {
   const imageContainerRef = useRef(null);
   const hasAnnotations = annotations.length > 0;
+  // Pre-compute severity counts for the browser bar badges
   const highCount = annotations.filter((a) => a.severity === "high").length;
   const mediumCount = annotations.filter((a) => a.severity === "medium").length;
 
@@ -118,7 +125,7 @@ export default function ImagePreview({
         boxSizing: "border-box",
       }}
     >
-      {/* Top bar */}
+      {/* Top bar: title, subtitle, and upload-new button */}
       <div
         style={{
           display: "flex",
@@ -172,7 +179,7 @@ export default function ImagePreview({
         </motion.button>
       </div>
 
-      {/* Error banner */}
+      {/* Error banner: animates in/out when an analysis error occurs */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -197,7 +204,7 @@ export default function ImagePreview({
         )}
       </AnimatePresence>
 
-      {/* Main layout: image + side panel */}
+      {/* Main layout: image column on the left, analysis sidebar on the right */}
       <motion.div
         layout
         style={{
@@ -207,7 +214,7 @@ export default function ImagePreview({
           flexWrap: "wrap",
         }}
       >
-        {/* Image container */}
+        {/* Image card with decorative browser chrome, heatmap overlays, and loading state */}
         <motion.div
           layout
           style={{
@@ -220,7 +227,7 @@ export default function ImagePreview({
             width: "100%",
           }}
         >
-          {/* Browser bar */}
+          {/* Decorative browser chrome bar with traffic-light dots and filename */}
           <div
             style={{
               padding: "10px 16px",
@@ -267,6 +274,7 @@ export default function ImagePreview({
             >
               uploaded-screenshot.png
             </span>
+            {/* Severity count badges — only shown after analysis */}
             {hasAnnotations && (
               <div style={{ marginLeft: "auto", display: "flex", gap: "6px" }}>
                 <span
@@ -297,7 +305,7 @@ export default function ImagePreview({
             )}
           </div>
 
-          {/* Image + overlay */}
+          {/* Image with absolutely-positioned heatmap boxes and loading overlay */}
           <div
             ref={imageContainerRef}
             style={{ position: "relative", width: "100%" }}
@@ -313,7 +321,7 @@ export default function ImagePreview({
               }}
             />
 
-            {/* Heatmap boxes */}
+            {/* Render one HeatmapBox per annotation, staggered via index */}
             <AnimatePresence>
               {hasAnnotations &&
                 annotations.map((annotation, i) => (
@@ -327,12 +335,12 @@ export default function ImagePreview({
                 ))}
             </AnimatePresence>
 
-            {/* Loading overlay */}
+            {/* Covers the image with a spinner while AI analysis is running */}
             <LoadingOverlay visible={analyzing} />
           </div>
         </motion.div>
 
-        {/* Right panel */}
+        {/* Right sidebar: AI analysis header, zone list or empty state, and analyze button */}
         <motion.div
           layout
           style={{
@@ -346,7 +354,7 @@ export default function ImagePreview({
             flex: "1 1 280px",
           }}
         >
-          {/* Panel header */}
+          {/* Sidebar header: static title and subtitle */}
           <div
             style={{ padding: "14px 18px", borderBottom: "1px solid #2D2D3D" }}
           >
@@ -365,10 +373,10 @@ export default function ImagePreview({
             </p>
           </div>
 
-          {/* Panel body */}
+          {/* Panel body: shows empty-state prompt before analysis, zone list after */}
           <div style={{ flex: 1, padding: "16px 18px", overflowY: "auto" }}>
             {!hasAnnotations ? (
-              /* Empty state */
+              /* Empty state: shown before the first analysis run */
               <div
                 style={{
                   display: "flex",
@@ -464,7 +472,7 @@ export default function ImagePreview({
                 </div>
               </div>
             ) : (
-              /* Zones list */
+              /* Zones list: one card per annotation, highlights the selected one */
               <div
                 style={{ display: "flex", flexDirection: "column", gap: "8px" }}
               >
@@ -480,8 +488,7 @@ export default function ImagePreview({
                   Click a zone to inspect
                 </p>
                 {annotations.map((ann, i) => {
-                  const s =
-                    severityStyles[ann.severity] || severityStyles.medium;
+                  const s = severityStyles[ann.severity] || severityStyles.medium;
                   const isActive = selectedAnnotation?.id === ann.id;
                   return (
                     <motion.div
@@ -550,6 +557,7 @@ export default function ImagePreview({
                           {ann.severity}
                         </span>
                       </div>
+                      {/* Truncated explanation preview — full text shown in AnalysisPanel */}
                       <p
                         style={{
                           fontSize: "11px",
@@ -569,7 +577,7 @@ export default function ImagePreview({
             )}
           </div>
 
-          {/* Analyze button */}
+          {/* Analyze / Re-analyze button — disabled and dimmed while analyzing */}
           <div style={{ padding: "14px 18px", borderTop: "1px solid #2D2D3D" }}>
             <motion.button
               onClick={onAnalyze}
@@ -617,7 +625,7 @@ export default function ImagePreview({
         </motion.div>
       </motion.div>
 
-      {/* Floating detail panel */}
+      {/* Floating AnalysisPanel — mounts/unmounts with AnimatePresence when a zone is selected */}
       <AnimatePresence>
         {selectedAnnotation && (
           <AnalysisPanel
